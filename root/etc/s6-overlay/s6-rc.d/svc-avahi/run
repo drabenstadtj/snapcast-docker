@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+if [ "$START_AIRPLAY" = 'true' ]; then
+  exec s6-notifyoncheck -d -n 300 -w 1000 \
+    avahi-daemon --no-drop-root --no-chroot
+fi
