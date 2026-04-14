@@ -4,7 +4,7 @@ FROM ghcr.io/linuxserver/baseimage-alpine:edge AS builder
 RUN apk add --no-cache \
     git autoconf automake libtool g++ make pkgconfig \
     avahi-dev openssl-dev libconfig-dev popt-dev soxr-dev \
-    libplist-dev libsodium-dev alsa-lib-dev dbus-dev
+    libplist libplist-dev libsodium-dev alsa-lib-dev dbus-dev
 
 # Build nqptp — required by shairport-sync for AirPlay 2 timing
 RUN git clone --depth=1 https://github.com/mikebrady/nqptp.git /tmp/nqptp \
