@@ -1,4 +1,4 @@
-FROM ghcr.io/linuxserver/shairport-sync:latest AS shairport-source
+FROM lscr.io/linuxserver/shairport-sync:latest AS shairport-source
 
 FROM ghcr.io/linuxserver/baseimage-alpine:edge AS nqptp-builder
 
