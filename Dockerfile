@@ -4,7 +4,7 @@ FROM ghcr.io/linuxserver/baseimage-alpine:edge AS builder
 RUN apk add --no-cache \
     git autoconf automake libtool g++ make pkgconfig \
     avahi-dev openssl-dev libconfig-dev popt-dev soxr-dev \
-    libplist libplist-dev libsodium-dev alsa-lib-dev dbus-dev
+    libplist libplist-dev libsodium-dev libgcrypt-dev alsa-lib-dev dbus-dev
 
 # Build libplist from source to obtain the plistutil binary.
 # Alpine's libplist package ships only the library — plistutil is not packaged separately.
