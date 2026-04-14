@@ -1,48 +1,16 @@
-FROM ghcr.io/linuxserver/baseimage-alpine:edge AS builder
+FROM ghcr.io/linuxserver/shairport-sync:latest AS shairport-source
 
-# Install build dependencies for shairport-sync and nqptp
+FROM ghcr.io/linuxserver/baseimage-alpine:edge AS nqptp-builder
+
 RUN apk add --no-cache \
-    git autoconf automake libtool g++ make pkgconfig \
-    avahi-dev openssl-dev libconfig-dev popt-dev soxr-dev \
-    libplist libplist-dev libsodium-dev libgcrypt-dev \
-    ffmpeg-dev alsa-lib-dev dbus-dev
+    git autoconf automake libtool g++ make pkgconfig
 
-# Build libplist from source to obtain the plistutil binary.
-# Alpine's libplist package ships only the library — plistutil is not packaged separately.
-# We only need the binary in PATH during the shairport-sync configure/build step.
-RUN git clone --depth=1 --branch 2.3.0 https://github.com/libimobiledevice/libplist.git /tmp/libplist \
-  && cd /tmp/libplist \
-  && autoreconf -fi \
-  && ./configure --without-cython \
-  && make \
-  && cp tools/plistutil /usr/local/bin/plistutil
-
-# Build nqptp — required by shairport-sync for AirPlay 2 timing
 RUN git clone --depth=1 https://github.com/mikebrady/nqptp.git /tmp/nqptp \
   && cd /tmp/nqptp \
   && autoreconf -fi \
   && ./configure \
   && make \
   && strip nqptp
-
-# Build shairport-sync from source with AirPlay 2 support
-# The Alpine package omits --with-airplay-2; we build it ourselves
-RUN git clone --depth=1 --branch 4.3.7 https://github.com/mikebrady/shairport-sync.git /tmp/shairport-sync \
-  && cd /tmp/shairport-sync \
-  && autoreconf -fi \
-  && ./configure \
-      --with-avahi \
-      --with-ssl=openssl \
-      --with-airplay-2 \
-      --with-soxr \
-      --with-metadata \
-      --with-dbus-interface \
-      --with-mpris-interface \
-      --with-stdout \
-      --with-pipe \
-      --sysconfdir=/etc \
-  && make \
-  && strip shairport-sync
 
 # ── runtime image ────────────────────────────────────────────────────────────
 FROM ghcr.io/linuxserver/baseimage-alpine:edge
@@ -68,7 +36,6 @@ LABEL maintainer="sweisgerber"
 RUN set -ex \
   && echo "**** setup apk testing mirror ****" \
   && echo "@testing https://nl.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories \
-  && cat /etc/apk/repositories \
   && echo "**** install runtime packages ****" \
   && apk add --no-cache -U --upgrade \
   alsa-utils \
@@ -88,12 +55,13 @@ RUN set -ex \
   snapcast@testing \
   snapweb@testing \
   && echo "**** cleanup ****" \
-  && rm -rf \
-  /tmp/*
+  && rm -rf /tmp/*
 
-# Copy custom-built binaries (with AirPlay 2) over the Alpine package versions
-COPY --from=builder /tmp/shairport-sync/shairport-sync /usr/bin/shairport-sync
-COPY --from=builder /tmp/nqptp/nqptp /usr/bin/nqptp
+# Copy shairport-sync binary from official linuxserver image (has AirPlay 2)
+COPY --from=shairport-source /usr/bin/shairport-sync /usr/bin/shairport-sync
+
+# Copy nqptp built from source
+COPY --from=nqptp-builder /tmp/nqptp/nqptp /usr/bin/nqptp
 
 # environment settings
 ENV \
