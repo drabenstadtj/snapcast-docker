@@ -27,7 +27,7 @@ RUN git clone --depth=1 https://github.com/mikebrady/nqptp.git /tmp/nqptp \
 
 # Build shairport-sync from source with AirPlay 2 support
 # The Alpine package omits --with-airplay-2; we build it ourselves
-RUN git clone --depth=1 --branch v4.3.7 https://github.com/mikebrady/shairport-sync.git /tmp/shairport-sync \
+RUN git clone --depth=1 --branch 4.3.7 https://github.com/mikebrady/shairport-sync.git /tmp/shairport-sync \
   && cd /tmp/shairport-sync \
   && autoreconf -fi \
   && ./configure \
