@@ -1,9 +1,12 @@
 services:
   snapcast:
+    build: .
     image: ghcr.io/drabenstadtj/snapcast-docker:latest
     container_name: snapcast
     hostname: snapcast
     network_mode: host
+    cap_add:
+      - SYS_NICE  # required by nqptp for real-time audio timing (AirPlay 2)
     environment:
       - PUID=1000
       - PGID=1000 # set to audio group ID

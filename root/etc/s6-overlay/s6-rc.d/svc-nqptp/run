@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+# nqptp provides the precision timing daemon required by shairport-sync for AirPlay 2.
+# It must run as root and must be up before shairport-sync connects to it.
+if [ "$START_AIRPLAY" = 'true' ]; then
+  exec /usr/bin/nqptp
+fi
