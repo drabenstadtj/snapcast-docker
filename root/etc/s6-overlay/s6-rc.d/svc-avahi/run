@@ -1,5 +1,40 @@
 #!/usr/bin/with-contenv bash
 if [ "$START_AIRPLAY" = 'true' ]; then
+  # Detect the LAN interface from the default route, or use AVAHI_INTERFACE if set.
+  # This is required when running with network_mode: host — without it, avahi
+  # advertises on every Docker veth interface, flooding mDNS and breaking discovery.
+  IFACE="${AVAHI_INTERFACE:-$(ip route show default 2>/dev/null | awk '/default/ {print $5; exit}')}"
+
+  if [ -z "$IFACE" ]; then
+    echo "WARNING: Could not detect a default-route interface for avahi. Set AVAHI_INTERFACE in your compose env to the name of your LAN interface (e.g. eth0)."
+  else
+    echo "Restricting avahi to interface: ${IFACE}"
+    mkdir -p /etc/avahi
+    cat > /etc/avahi/avahi-daemon.conf << EOF
+[server]
+host-name=$(hostname)
+domain-name=local
+use-ipv4=yes
+use-ipv6=yes
+allow-interfaces=${IFACE}
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+
+[wide-area]
+enable-wide-area=yes
+
+[publish]
+publish-addresses=yes
+publish-hinfo=yes
+publish-workstation=no
+publish-domain=yes
+
+[reflector]
+
+[rlimits]
+EOF
+  fi
+
   exec s6-notifyoncheck -d -n 300 -w 1000 \
     avahi-daemon --no-drop-root --no-chroot
 fi

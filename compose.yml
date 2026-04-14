@@ -10,6 +10,10 @@ services:
       - TZ=America/New_York
       - START_SNAPCLIENT=false
       - START_AIRPLAY=true #set to 'true' to enable Airplay support via Shairport-sync
+      # Optional: set AVAHI_INTERFACE to your LAN interface name (e.g. eth0, ens3, bond0).
+      # If unset, the interface is auto-detected from the default route.
+      # Required if auto-detection picks the wrong interface.
+      #- AVAHI_INTERFACE=eth0
     restart: unless-stopped
     volumes:
       - /opt/data/config/snapcast:/config/
