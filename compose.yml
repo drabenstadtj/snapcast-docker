@@ -1,0 +1,19 @@
+services:
+  snapcast:
+    image: ghcr.io/drabenstadtj/snapcast-docker:latest
+    container_name: snapcast
+    hostname: snapcast
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000 # set to audio group ID
+      - TZ=America/New_York
+      - START_SNAPCLIENT=false
+      - START_AIRPLAY=true #set to 'true' to enable Airplay support via Shairport-sync
+    restart: unless-stopped
+    volumes:
+      - /opt/data/config/snapcast:/config/
+      - ./data/:/data/
+      - ./audio-fifos/:/audio/
+      - /opt/data/config/snapcast/cache:/var/cache/librespot
+      - /tmp/snapcast:/tmp/   
