@@ -6,6 +6,16 @@ RUN apk add --no-cache \
     avahi-dev openssl-dev libconfig-dev popt-dev soxr-dev \
     libplist libplist-dev libsodium-dev alsa-lib-dev dbus-dev
 
+# Build libplist from source to obtain the plistutil binary.
+# Alpine's libplist package ships only the library — plistutil is not packaged separately.
+# We only need the binary in PATH during the shairport-sync configure/build step.
+RUN git clone --depth=1 https://github.com/libimobiledevice/libplist.git /tmp/libplist \
+  && cd /tmp/libplist \
+  && autoreconf -fi \
+  && ./configure --without-cython \
+  && make \
+  && cp tools/plistutil /usr/local/bin/plistutil
+
 # Build nqptp — required by shairport-sync for AirPlay 2 timing
 RUN git clone --depth=1 https://github.com/mikebrady/nqptp.git /tmp/nqptp \
   && cd /tmp/nqptp \
