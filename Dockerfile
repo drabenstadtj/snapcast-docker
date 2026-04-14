@@ -1,40 +1,4 @@
-FROM ghcr.io/linuxserver/baseimage-alpine:edge AS builder
-
-# Install build dependencies for shairport-sync only (librespot will use Alpine package)
-RUN apk add --no-cache \
-  alpine-sdk \
-  autoconf \
-  automake \
-  libtool \
-  dbus-dev \
-  popt-dev \
-  openssl-dev \
-  libconfig-dev \
-  avahi-dev \
-  libplist-dev \
-  libsndfile-dev \
-  git
-
-# Build shairport-sync from source
-RUN git clone https://github.com/mikebrady/shairport-sync.git /tmp/shairport-sync && \
-  cd /tmp/shairport-sync && \
-  git checkout 4.3.5 && \
-  autoreconf -fi && \
-  ./configure \
-  --prefix=/usr \
-  --sysconfdir=/etc \
-  --with-alsa \
-  --with-avahi \
-  --with-ssl=openssl \
-  --with-metadata \
-  --with-dbus-interface \
-  --with-mpris-interface \
-  --with-pipe \
-  --with-stdout && \
-  make -j$(nproc) && \
-  make install DESTDIR=/tmp/shairport-install
-
-# Final stage
+# No builder stage needed - just the final stage
 FROM ghcr.io/linuxserver/baseimage-alpine:edge
 
 # Create shairport-sync user (handle existing GID)
@@ -73,15 +37,12 @@ RUN set -ex \
   soxr \
   popt \
   librespot@testing \
+  shairport-sync@testing \
   snapcast@testing \
   snapweb@testing \
   && echo "**** cleanup ****" \
   && rm -rf \
   /tmp/*
-
-# Copy shairport-sync from builder
-COPY --from=builder /tmp/shairport-install/usr/bin/shairport-sync /usr/bin/shairport-sync
-COPY --from=builder /tmp/shairport-install/etc/dbus-1/system.d/shairport-sync-dbus.conf /etc/dbus-1/system.d/
 
 # environment settings
 ENV \
