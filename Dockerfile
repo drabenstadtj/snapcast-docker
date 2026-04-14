@@ -1,21 +1,6 @@
 FROM ghcr.io/linuxserver/baseimage-alpine:edge AS builder
 
-# Install build dependencies for librespot
-RUN apk add --no-cache \
-  cargo \
-  rust \
-  alsa-lib-dev \
-  protobuf-dev \
-  openssl-dev
-
-# Build librespot from source
-ARG LIBRESPOT_RELEASE=0.8.0
-RUN cargo install librespot --version ${LIBRESPOT_RELEASE} \
-  --no-default-features \
-  --features alsa-backend,rustls-tls-native-roots,with-libmdns
-
-# Build shairport-sync
-FROM builder AS shairport-builder
+# Install build dependencies for shairport-sync only (librespot will use Alpine package)
 RUN apk add --no-cache \
   alpine-sdk \
   autoconf \
@@ -28,9 +13,9 @@ RUN apk add --no-cache \
   avahi-dev \
   libplist-dev \
   libsndfile-dev \
-  libsoxr-dev \
   git
 
+# Build shairport-sync from source
 RUN git clone https://github.com/mikebrady/shairport-sync.git /tmp/shairport-sync && \
   cd /tmp/shairport-sync && \
   git checkout 4.3.5 && \
@@ -68,7 +53,6 @@ RUN if ! getent group 1000 > /dev/null; then \
 ARG BUILD_DATE
 ARG VERSION
 ARG SNAPCAST_RELEASE
-ARG LIBRESPOT_RELEASE
 LABEL build_version="version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="sweisgerber"
 
@@ -88,17 +72,16 @@ RUN set -ex \
   libsndfile \
   soxr \
   popt \
+  librespot@testing \
   snapcast@testing \
   snapweb@testing \
   && echo "**** cleanup ****" \
   && rm -rf \
   /tmp/*
 
-# Copy librespot binary from builder stage
-COPY --from=builder /root/.cargo/bin/librespot /usr/bin/librespot
 # Copy shairport-sync from builder
-COPY --from=shairport-builder /tmp/shairport-install/usr/bin/shairport-sync /usr/bin/shairport-sync
-COPY --from=shairport-builder /tmp/shairport-install/etc/dbus-1/system.d/shairport-sync-dbus.conf /etc/dbus-1/system.d/
+COPY --from=builder /tmp/shairport-install/usr/bin/shairport-sync /usr/bin/shairport-sync
+COPY --from=builder /tmp/shairport-install/etc/dbus-1/system.d/shairport-sync-dbus.conf /etc/dbus-1/system.d/
 
 # environment settings
 ENV \

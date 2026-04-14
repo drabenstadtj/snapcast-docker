@@ -63,4 +63,4 @@ jobs:
                       BUILD_DATE=${{ steps.meta.outputs.build_date }}
                       VERSION=${{ steps.meta.outputs.version }}
                       SNAPCAST_RELEASE=0.35.0
-                      LIBRESPOT_RELEASE=0.8.0
+                      # LIBRESPOT_RELEASE removed - no longer needed
