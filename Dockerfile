@@ -86,7 +86,7 @@ RUN set -ex \
   libconfig \
   libplist \
   libsndfile \
-  libsoxr \
+  soxr \
   popt \
   snapcast@testing \
   snapweb@testing \
